@@ -1,5 +1,6 @@
 import { messages } from "@vinejs/vine/defaults";
-import { imageValidator } from "../utils/helper.js";
+import { imageValidator } from "../../utils/helper.js";
+import prisma from "../db.config.js";
 
 class ProfileController {
 
@@ -25,32 +26,44 @@ class ProfileController {
       const { id } = req.params;
       const authUser = req.user;
 
-      // Check if files are present
-      if (!req.files || Object.keys(req.files).length === 0) {
-        return res.status(400).json({ message: " is required" });
+      console.log("Profile upload - req.file:", req.file);
+
+      // Check if file is present
+      if (!req.file) {
+        return res.status(400).json({ message: "Profile image is required" });
       }
 
       // Access the uploaded file
-      const profile = req.files.profile;
+      const profile = req.file;
+
+      console.log("File details:", {
+        size: profile.size,
+        mimetype: profile.mimetype,
+        filename: profile.filename
+      });
 
       // Validate file
       const message = imageValidator(profile?.size, profile.mimetype);
+      console.log("Validation message:", message);
+      
       if (message !== null) {
-        return res.status(400).json({ status: 400, message: "Plewwese upload a supported image file" });
+        return res.status(400).json({ status: 400, message: message });
       }
 
-      // Optionally, save the file to uploads folder
-      await profile.mv(`./uploads/${profile.name}`);
+      // Update user profile in database
+      const updatedUser = await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: { profile: profile.path }
+      });
 
       return res.json({
         status: 200,
-        name: profile.name,
-        size: profile?.size,
-        mime: profile?.mimetype
+        message: "Profile updated successfully",
+        user: updatedUser
       });
 
     } catch (error) {
-      console.error(error);
+      console.error("Profile update error:", error);
       return res.status(500).json({ message: "Something went wrong" });
     }
   }

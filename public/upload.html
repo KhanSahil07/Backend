@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Upload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    input[type="file"], input[type="text"], textarea {
+      display: block;
+      width: 100%;
+      margin: 1rem 0;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 0.5rem;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .message {
+      margin-top: 1rem;
+      text-align: center;
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Create News Post</h2>
+    <form id="uploadForm">
+      <input type="text" name="title" placeholder="News Title" required />
+      <textarea name="content" placeholder="News Content" required></textarea>
+      <input type="file" name="image" accept="image/*" required />
+      <button type="submit">Create Post</button>
+    </form>
+    <div class="message" id="message"></div>
+  </div>
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/news', {
+          method: 'POST',
+          body: formData,
+          headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('message').textContent = 'News post created successfully!';
+          document.getElementById('message').classList.remove('error');
+          // Reset form
+          document.getElementById('uploadForm').reset();
+        } else {
+          document.getElementById('message').textContent = data.error || 'Upload failed.';
+          document.getElementById('message').classList.add('error');
+        }
+      } catch (err) {
+        document.getElementById('message').textContent = 'Network error.';
+        document.getElementById('message').classList.add('error');
+      }
+    });
+  </script>
+</body>
+</html>

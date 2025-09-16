@@ -1,4 +1,4 @@
-import { supportFile } from "../config/fileSystem.js";
+import { supportFile } from "../DB/controller/config/fileSystem.js";
 import {v4 as uuidv4} from "uuid"
 export const imageValidator=(size,mime) => {
 if (bytesTomb(size)>2){

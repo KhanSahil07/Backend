@@ -1,7 +1,7 @@
-import prisma from "../DB/db.config.js";
+import prisma from "../db.config.js";
 import vine, { errors } from "@vinejs/vine"
 // controller/AutoController.js
-import  {loginSchema, registerSchema}  from "../validations/authValidation.js";
+import  {loginSchema, registerSchema}  from "../../validations/authValidation.js";
 // just to debug
 import bcrypt from 'bcryptjs';
 import jwt from "jsonwebtoken";

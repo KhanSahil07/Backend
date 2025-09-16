@@ -1,6 +1,6 @@
 import vine,{ errors } from "@vinejs/vine";
-
-import { newsSchema } from "../validations/newsValidation.js";
+import prisma from "../db.config.js";
+import { newsSchema } from "../../validations/newsValidation.js";
 
 
 
@@ -25,72 +25,41 @@ static async index(req,res){
 
 
 static async store(req, res) {
+  try {
+    const user = req.user;
+    
+    // File required check
+    if (!req.file) {
+      return res.status(400).json({ message: "Image is required" });
 
-try {
-
-const user = req.user;
-
-
-
-// File required check
-
-if (!req.files || !req.files.image) {
-
-return res.status(400).json({ message: "Image is required" });
-
-}
-
-
-
-const imageFile = req.files.image;
-
-const fileName = `${Date.now()}_${imageFile.name}`;
-
-const uploadPath = `uploads/${fileName}`;
-
-
-
-// File move
-
-await imageFile.mv(uploadPath);
-
-
-
-// Prepare body for validation (add image as string)
-
-const body = {
-
-...req.body,
-
-image: uploadPath, // <-- VineJS expects a string
-
-};
-
-
-
-// Validate with Vine
-
-const validator = vine.compile(newsSchema);
-
-const payload = await validator.validate(body);
-
-
-
-return res.status(200).json({
-
-status: 200,
-
-message: "News created successfully",
-
-data: {
-
-...payload,
-
-user_id: user.id,
-
-},
-
-});
+    }
+    
+    // Multer saves file and provides path
+    const imagePath = req.file.path;
+    
+    // Prepare body for validation (add image as string)
+    const body = {
+      ...req.body,
+      image: imagePath, // VineJS expects a string
+    };
+    
+    // Validate with Vine
+    const validator = vine.compile(newsSchema);
+    const payload = await validator.validate(body);
+    
+    // Save to database using Prisma
+    const news = await prisma.news.create({
+      data: {
+        ...payload,
+        user_id: user.id,
+      }
+    });
+    
+    return res.status(200).json({
+      status: 200,
+      message: "News created successfully",
+      data: news,
+    });
 
 } catch (error) {
 
